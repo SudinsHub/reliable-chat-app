@@ -5,55 +5,62 @@ public class DatabaseManager {
     private static final String DB_URL = "jdbc:sqlite:chat.db";
     
     public static void initializeDatabase() {
-        try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            // Create messages table
-            String createMessagesTable = """
-                CREATE TABLE IF NOT EXISTS messages (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    sender TEXT NOT NULL,
-                    receiver TEXT NOT NULL,
-                    seq INTEGER NOT NULL,
-                    content TEXT NOT NULL,
-                    type TEXT DEFAULT 'text',
-                    timestamp INTEGER NOT NULL
-                )
-            """;
-            
-            // Create file_chunks table
-            String createFileChunksTable = """
-                CREATE TABLE IF NOT EXISTS file_chunks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    sender TEXT NOT NULL,
-                    receiver TEXT NOT NULL,
-                    file_name TEXT NOT NULL,
-                    chunk_index INTEGER NOT NULL,
-                    total_chunks INTEGER NOT NULL,
-                    chunk_data TEXT NOT NULL,
-                    timestamp INTEGER NOT NULL
-                )
-            """;
-            
-            // Create users table
-            String createUsersTable = """
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT UNIQUE NOT NULL,
-                    last_activity INTEGER NOT NULL
-                )
-            """;
-            
+        try {
+            // Load the SQLite JDBC driver
+            Class.forName("org.sqlite.JDBC");
+
+            // Connect to the SQLite database
+            Connection conn = DriverManager.getConnection(DB_URL);
+
+            // SQL to create messages table
+            String createMessagesTable = "CREATE TABLE IF NOT EXISTS messages (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "sender TEXT NOT NULL, " +
+                "receiver TEXT NOT NULL, " +
+                "seq INTEGER NOT NULL, " +
+                "content TEXT NOT NULL, " +
+                "type TEXT DEFAULT 'text', " +
+                "timestamp INTEGER NOT NULL" +
+                ")";
+
+            // SQL to create file_chunks table
+            String createFileChunksTable = "CREATE TABLE IF NOT EXISTS file_chunks (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "sender TEXT NOT NULL, " +
+                "receiver TEXT NOT NULL, " +
+                "file_name TEXT NOT NULL, " +
+                "chunk_index INTEGER NOT NULL, " +
+                "total_chunks INTEGER NOT NULL, " +
+                "chunk_data TEXT NOT NULL, " +
+                "timestamp INTEGER NOT NULL" +
+                ")";
+
+            // SQL to create users table
+            String createUsersTable = "CREATE TABLE IF NOT EXISTS users (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "username TEXT UNIQUE NOT NULL, " +
+                "last_activity INTEGER NOT NULL" +
+                ")";
+
+            // Execute all create table statements
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute(createMessagesTable);
                 stmt.execute(createFileChunksTable);
                 stmt.execute(createUsersTable);
             }
-            
-            System.out.println("Database initialized successfully");
-            
+
+            conn.close();
+            System.out.println("✅ Database initialized successfully");
+
+        } catch (ClassNotFoundException e) {
+            System.err.println("❌ SQLite JDBC driver not found.");
+            e.printStackTrace();
         } catch (SQLException e) {
+            System.err.println("❌ Database error:");
             e.printStackTrace();
         }
     }
+
     
     public static void storeMessage(ChatServer.Message message) {
         String sql = "INSERT INTO messages (sender, receiver, seq, content, type, timestamp) VALUES (?, ?, ?, ?, ?, ?)";
