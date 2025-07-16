@@ -132,14 +132,15 @@ public class DatabaseManager {
     }
     
     public static List<String> getActiveUsers() {
-        String sql = "SELECT DISTINCT username FROM users WHERE last_activity > ?";
+        // String sql = "SELECT DISTINCT username FROM users WHERE last_activity > ?";
+        String sql = "SELECT DISTINCT username FROM users";
         List<String> users = new ArrayList<>();
         long fiveMinutesAgo = System.currentTimeMillis() - 300000;
         
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setLong(1, fiveMinutesAgo);
+            // pstmt.setLong(1, fiveMinutesAgo);
             
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
